@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+#include <math.h>
 using namespace std;
 using namespace cv;
 
@@ -30,6 +31,8 @@ const std::string windowName2 = "Thresholded Image";
 const std::string windowName3 = "After Morphological Operations";
 const std::string trackbarWindowName = "Trackbars";
 
+float directiaMea=0.0;
+float directieAdversar=0.0;
 
 void on_mouse(int e, int x, int y, int d, void *ptr)
 {
@@ -230,12 +233,32 @@ void trimiteComenzi(int sockfd,char *sirComenzi){
 	}
 	return;
 }
+float distanta(int x1 , int y1, int x2 , int y2){
+	return sqrt(((float)(((float)((((float)x1)-((float)x2))*(((float)x1)-((float)x2))))+((float)((((float)y1)-((float)y2))*(((float)y1)-((float)y2)))))));
+}
+void rotesteSpreAdversar(int xMeu,yMeu,xAdv,yAdv){
 
+}
+void rotesteUnghiAcceptabil(int xMeu,int yMeu,int xAdv,int yAdv){
 
+}
+void duteSpreAdv(int xMeu , int yMeu , int xAdv , int yAdv,int sockfd){
+	if (distanta(xMeu,yMeu,xAdv,yAdv)>prag){
+		rotesteSpreAdversar(xMeu,yMeu,xAdv,yAdv);
+		trimiteComenzi("fs");
+	}
+	else{
+		rotesteUnghiAcceptabil(xMeu,yMeu,xAdv,yAdv);
+		trimiteComenzi("f");
+	}
+}
+void miscaRobot(int xMeu , int yMeu , int xAdv , int yAdv,int sockfd){
+
+}
 int main(int argc, char* argv[])
 {
-	int sockfd = initializareSocket("193.226.12.217",20236);
-	trimiteComenzi(sockfd,"fsbsl");
+	//int sockfd = initializareSocket("193.226.12.217",20236);
+	//trimiteComenzi(sockfd,"fsbsl");
 
 /*
 	//some boolean variables for different functionality within this
