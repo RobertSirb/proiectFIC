@@ -31,9 +31,11 @@ const std::string windowName2 = "Thresholded Image";
 const std::string windowName3 = "After Morphological Operations";
 const std::string trackbarWindowName = "Trackbars";
 
-float directiaMea=0.0;
-float directieAdversar=0.0;
-
+float mMeu=0.0;
+float mAdv=0.0;
+int xCentru=0.0
+int yCentru=0.0;
+float raza=0.0;
 void on_mouse(int e, int x, int y, int d, void *ptr)
 {
 	if (e == EVENT_LBUTTONDOWN)
@@ -233,9 +235,10 @@ void trimiteComenzi(int sockfd,char *sirComenzi){
 	}
 	return;
 }
-float distanta(int x1 , int y1, int x2 , int y2){
+float distanta(float x1 , float y1, float x2 , float y2){
 	return sqrt(((float)(((float)((((float)x1)-((float)x2))*(((float)x1)-((float)x2))))+((float)((((float)y1)-((float)y2))*(((float)y1)-((float)y2)))))));
 }
+/*
 void rotesteSpreAdversar(int xMeu,yMeu,xAdv,yAdv){
 
 }
@@ -251,10 +254,31 @@ void duteSpreAdv(int xMeu , int yMeu , int xAdv , int yAdv,int sockfd){
 		rotesteUnghiAcceptabil(xMeu,yMeu,xAdv,yAdv);
 		trimiteComenzi("f");
 	}
+}*/
+
+void aflaCoordonate(int xMeu,int yMeu, int xAdv,int yAdv, int *xp, int *yp){
+	float fxMeu,fyMeu,fxAdv,fyAdv,fxp,fyp,fmMeu,fmAdv;
+	fxMeu=xMeu;
+	fyMeu=yMeu;
+	fxAdv=xAdv;
+	fyAdv=yAdv;
+	fmMeu=mMeu;
+	fmAdv=mAdv;
+
+	fxp=(fmAdv*fxMeu+(fxAdv/fmAdv)+fyAdv-fyMeu)/(fmAdv+(1.0/fmAdv));
+	fyp=((fmAdv*fmAdv*fxMeu+fxAdv+fmAdv*fyAdv-fmAdv*fyMeu)/(fmAdv+(1.0/fmAdv)))-(fmAdv*fxMeu)+(fyMeu);
+	if (distanta(fxAdv,fyAdv,fxp,fyp)<dimensiuneBataie){
+
+
+	}
 }
 void miscaRobot(int xMeu , int yMeu , int xAdv , int yAdv,int sockfd){
-
+	int xp,yp,
+	aflaCoordonate(xMeu, yMeu,xAdv,yAdv,&xp,&yp);
+	duteLa(xMeu,yMeu,xp,yp,sockfd);
+	calculeazaDirectie(xMeu ,  yMeu ,  xAdv ,  yAdv);
 }
+
 int main(int argc, char* argv[])
 {
 	//int sockfd = initializareSocket("193.226.12.217",20236);
