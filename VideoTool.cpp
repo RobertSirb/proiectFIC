@@ -33,9 +33,14 @@ const std::string trackbarWindowName = "Trackbars";
 
 float mMeu=0.0;
 float mAdv=0.0;
-int xCentru=0.0
-int yCentru=0.0;
-float raza=0.0;
+float xmv=0; //
+float ymv=0; //
+float xav=0; //
+float yav=0; //
+float xCentru=0.0 //p
+float yCentru=0.0; //p
+float raza=0.0; //p
+float  teta_10ms = 90; //p
 void on_mouse(int e, int x, int y, int d, void *ptr)
 {
 	if (e == EVENT_LBUTTONDOWN)
@@ -210,7 +215,7 @@ bool verificaComanda(char c){
 	return false;
 
 }
-void trimiteComenzi(int sockfd,char *sirComenzi){
+void trimiteComenzi(int sockfd,char *sirComenziS,int uTime){
 	int i=0,lungime,bytes_sent;
 	char ultimaComanda;
 	lungime=strlen(sirComenzi);
@@ -226,7 +231,7 @@ void trimiteComenzi(int sockfd,char *sirComenzi){
 			}
 			else{
 				ultimaComanda=sirComenzi[i];
-				sleep(1);
+				usleep(uTime);
 			}
 		}
 	}
@@ -238,38 +243,83 @@ void trimiteComenzi(int sockfd,char *sirComenzi){
 float distanta(float x1 , float y1, float x2 , float y2){
 	return sqrt(((float)(((float)((((float)x1)-((float)x2))*(((float)x1)-((float)x2))))+((float)((((float)y1)-((float)y2))*(((float)y1)-((float)y2)))))));
 }
-/*
-void rotesteSpreAdversar(int xMeu,yMeu,xAdv,yAdv){
-
+void mergiInainte(int sockfd){
+    char comenzi[3];
+    comenzi[0]='f';
+    comenzi[1]='s';
+    comenzi[2]=0;
+    trimiteComenzi(sockfd,comenzi,10*1000);
 }
-void rotesteUnghiAcceptabil(int xMeu,int yMeu,int xAdv,int yAdv){
-
+void roteste(float teta,char directie,int sockfd){
+    float timp=teta/teta_10ms;
+    timp=timp*10*1000;
+    char comenzi[3];
+    comenzi[0]=directie;
+    comenzi[1]='s';
+    comenzi[2]=0;
+    trimiteComenzi(sockfd,comenzi,timp);
 }
-void duteSpreAdv(int xMeu , int yMeu , int xAdv , int yAdv,int sockfd){
-	if (distanta(xMeu,yMeu,xAdv,yAdv)>prag){
-		rotesteSpreAdversar(xMeu,yMeu,xAdv,yAdv);
-		trimiteComenzi("fs");
-	}
-	else{
-		rotesteUnghiAcceptabil(xMeu,yMeu,xAdv,yAdv);
-		trimiteComenzi("f");
-	}
-}*/
+float punctLaDreapta(float x1,float y1, float x2 , float y2, float x0, float y0){
+    float p1=abs((y2-y1)*x0-(x2-x1)*y0+x2*y1-y2*x1);
+    float p2=sqrt((y2-y1)*(y2-y1)+(x2-x1)*(x2-x1));
+    return p1/p2;
+}
+void duteLa(int xMeu,int yMeu,int xp,int yp,int sockfd){
+    float d = punctLaDreapta(xvm,yvm,xMeu,yMeu,xp,yp);
+    float teta=d/distanta(xMeu,yMeu,xp,yp);
+    teta=asin(teta);
+    if ((xp-xMeu)>=0){
+        teta=teta;
+    }
+    else{
+        teta=2*3.1415 -teta;
+    }
+    if ((yp-yMeu)>=0){
+        char directie='s';
+    }
+    else{
+        char directie='d';
+    }
+    roteste(teta,directie);
+    mergiInainte(sockfd);
+}
+void calculeazaDirectie(int xMeu, int yMeu, int xAdv, int yAdv){
+    if (xMeu==xmv){
+        mMeu=0.0;
+    }
+    else{
+        mMeu=(float)(((float)yMeu - (float)ymv)/((float)xMeu-(float)xmv));
+    }
+    if (xAdv==xav){
+        mAdv=0.0;
+    }
+    else{
+        mAdv=(float)(((float)yAdv - (float)yav)/((float)xAdv-(float)xav));
+    }
+    xmv=xMeu;
+    ymv=yMeu;
+    xav=xAdv;
+    yav=yAdv;
+}
 
 void aflaCoordonate(int xMeu,int yMeu, int xAdv,int yAdv, int *xp, int *yp){
 	float fxMeu,fyMeu,fxAdv,fyAdv,fxp,fyp,fmMeu,fmAdv;
-	fxMeu=xMeu;
-	fyMeu=yMeu;
-	fxAdv=xAdv;
-	fyAdv=yAdv;
-	fmMeu=mMeu;
-	fmAdv=mAdv;
+	fxMeu=(float)xMeu;
+	fyMeu=(float)yMeu;
+	fxAdv=(float)xAdv;
+	fyAdv=(float)yAdv;
+	fmMeu=(float)mMeu;
+	fmAdv=(float)mAdv;
 
 	fxp=(fmAdv*fxMeu+(fxAdv/fmAdv)+fyAdv-fyMeu)/(fmAdv+(1.0/fmAdv));
 	fyp=((fmAdv*fmAdv*fxMeu+fxAdv+fmAdv*fyAdv-fmAdv*fyMeu)/(fmAdv+(1.0/fmAdv)))-(fmAdv*fxMeu)+(fyMeu);
-	if (distanta(fxAdv,fyAdv,fxp,fyp)<dimensiuneBataie){
-
-
+	if ((distanta(fxAdv,fyAdv,fxp,fyp)<dimensiuneBataie) || (distanta(fxp,fyp,xCentru,yCentru)>=raza)){
+        *xp=(int)xCentru;
+        *yp=(int)yCentru;
+	}
+	else{
+        *xp=(int)fxp;
+        *yp=(int)fyp;
 	}
 }
 void miscaRobot(int xMeu , int yMeu , int xAdv , int yAdv,int sockfd){
@@ -332,7 +382,7 @@ int main(int argc, char* argv[])
 
 
 
-
+    int inceput =0;
 	while (1) {
 
 
@@ -359,6 +409,15 @@ int main(int argc, char* argv[])
 		{
 			trackFilteredObject(x, y, threshold, cameraFeed);
 			trackFilteredObject(x1, y1, threshold1, cameraFeed);
+			if(inceput == 0){
+             xmv=x;
+             ymv=y;
+             xav=x1;
+             yav=y1;
+			}
+			else{
+               miscaRobot(x,y,x1,y1,sockfd);
+			}
 		}
 		//show frames
 		imshow(windowName2, threshold);
